@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Web Game Edukasi</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#111;
+  color:white;
+  text-align:center;
+}
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 15px;
+  background:#222;
+}
+.menu-btn{font-size:22px;cursor:pointer}
+.menu{
+  display:none;
+  position:absolute;
+  right:10px;
+  top:50px;
+  background:#333;
+  border-radius:8px;
+}
+.menu button{
+  background:none;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  width:100%;
+  cursor:pointer;
+}
+.menu button:hover{background:#444}
+.screen{display:none;padding:20px}
+.active{display:block}
+button{
+  padding:10px 20px;
+  margin:8px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.main-btn{background:#00bcd4;color:black}
+input{padding:8px;border-radius:6px;border:none}
+.by{
+  position:fixed;
+  right:5px;
+  bottom:50%;
+  transform:rotate(-90deg);
+  font-size:12px;
+  opacity:0.6;
+}
+.sos{
+  position:fixed;
+  left:10px;
+  bottom:10px;
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:8px 12px;
+  border-radius:20px;
+}
+#road{
+  position:relative;
+  width:200px;
+  height:300px;
+  background:#333;
+  margin:0 auto;
+  overflow:hidden;
+}
+.player,.enemy{
+  width:30px;
+  height:50px;
+  position:absolute;
+  bottom:10px;
+  background:cyan;
+}
+.enemy{background:red;top:-60px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>Web Game Edukasi</div>
+  <div class="menu-btn" onclick="toggleMenu()">⋮</div>
+</header>
+
+<div class="menu" id="menu">
+  <button onclick="showLogin()">Login</button>
+</div>
+
+<div class="sos" onclick="alert('ANDA HARUS MENELEPON 911 SEKARANG 💀')">SOS</div>
+
+<div id="loginInfo" class="screen active">
+  <h2>Hey ayo kita login 😀</h2>
+  <p>(login di titik tiga ⋮)</p>
+</div>
+
+<div id="login" class="screen">
+  <h2>Login</h2>
+  <input id="nameInput" placeholder="Masukkan nama">
+  <br><br>
+  <button class="main-btn" onclick="doLogin()">Masuk</button>
+</div>
+
+<div id="menuUtama" class="screen">
+  <h2 id="welcome"></h2>
+  <button class="main-btn" onclick="showCar()">Permainan</button>
+  <button class="main-btn" onclick="showMath()">Matematika</button>
+</div>
+
+<!-- GAME MOBIL -->
+<div id="carGame" class="screen">
+  <h2>Hindari Mobil Musuh</h2>
+  <p>Poin: <span id="carPoint">0</span></p>
+  <div id="road">
+    <div class="player" id="player" style="left:85px"></div>
+    <div class="enemy" id="enemy" style="left:20px"></div>
+  </div>
+  <p id="carMsg"></p>
+  <button onclick="backMenu()">Menu</button>
+</div>
+
+<!-- MATEMATIKA -->
+<div id="math" class="screen">
+  <h2>Matematika</h2>
+  <p id="question"></p>
+  <input id="answer">
+  <button class="main-btn" onclick="checkMath()">Jawab</button>
+  <p>Poin: <span id="mathPoint">0</span></p>
+  <p id="mathMsg"></p>
+  <button onclick="backMenu()">Menu</button>
+</div>
+
+<div class="by">by fahrijal Nurjaman</div>
+
+<script>
+let username="", mathPoint=0, correct=0;
+let carPoint=0, speed=2, enemyY=-60, gameRun=false;
+
+function toggleMenu(){
+  menu.style.display = menu.style.display==="block"?"none":"block";
+}
+function showLogin(){
+  hideAll(); login.classList.add("active"); toggleMenu();
+}
+function doLogin(){
+  username=nameInput.value;
+  if(!username) return alert("Isi nama dulu");
+  hideAll();
+  menuUtama.classList.add("active");
+  welcome.innerText="Selamat datang "+username+" di sini";
+}
+function hideAll(){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+}
+function backMenu(){
+  gameRun=false;
+  hideAll();
+  menuUtama.classList.add("active");
+}
+
+/* GAME MOBIL */
+function showCar(){
+  hideAll();
+  carPoint=0; speed=2; enemyY=-60;
+  carPointSpan.innerText=carPoint;
+  carMsg.innerText="";
+  carGame.classList.add("active");
+  gameRun=true;
+  loop();
+}
+const carPointSpan=document.getElementById("carPoint");
+const carMsg=document.getElementById("carMsg");
+const enemy=document.getElementById("enemy");
+const player=document.getElementById("player");
+
+document.addEventListener("keydown",e=>{
+  if(!gameRun) return;
+  let x=player.offsetLeft;
+  if(e.key==="ArrowLeft" && x>0) player.style.left=x-20+"px";
+  if(e.key==="ArrowRight" && x<170) player.style.left=x+20+"px";
+});
+
+function loop(){
+  if(!gameRun) return;
+  enemyY+=speed;
+  enemy.style.top=enemyY+"px";
+
+  if(enemyY>300){
+    enemyY=-60;
+    enemy.style.left=Math.random()*170+"px";
+    carPoint++;
+    carPointSpan.innerText=carPoint;
+    if(carPoint%10===0) speed+=0.5;
+    if(carPoint>=100){
+      carMsg.innerText="TAMAT 🎉";
+      gameRun=false;
+      return;
+    }
+  }
+
+  // collision
+  let px=player.offsetLeft, ex=enemy.offsetLeft;
+  if(enemyY>230 && Math.abs(px-ex)<30){
+    carMsg.innerText="KENA ❌";
+    gameRun=false;
+    return;
+  }
+  requestAnimationFrame(loop);
+}
+
+/* MATEMATIKA */
+function showMath(){
+  hideAll();
+  mathPoint=0;
+  mathPointEl.innerText=mathPoint;
+  mathMsg.innerText="";
+  newQuestion();
+  math.classList.add("active");
+}
+const mathPointEl=document.getElementById("mathPoint");
+const mathMsg=document.getElementById("mathMsg");
+
+function newQuestion(){
+  const a=Math.floor(Math.random()*10)+1;
+  const b=Math.floor(Math.random()*10)+1;
+  const op=Math.random()>0.5?"+":"×";
+  question.innerText=`${a} ${op} ${b}`;
+  correct=op==="+"?a+b:a*b;
+}
+function checkMath(){
+  if(Number(answer.value)===correct){
+    mathPoint+=10;
+    mathPointEl.innerText=mathPoint;
+    mathMsg.innerText="BENAR ✅";
+    if(mathPoint>=100){
+      mathMsg.innerText="KAMU PINTER SEKALI 🧠🎉";
+      mathPoint=0;
+      mathPointEl.innerText=mathPoint;
+    }
+    newQuestion();
+  }else{
+    mathMsg.innerText="SALAH ❌";
+  }
+  answer.value="";
+}
+</script>
+
+</body>
+</html>
